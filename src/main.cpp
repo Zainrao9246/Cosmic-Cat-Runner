@@ -1466,7 +1466,7 @@ static void DrawPowerIcon(int kind, int x, int y, int px)
     }
 }
 
-static void DrawHeart(int cx, int cy, float s, bool full)
+static void DrawHeart(float cx, float cy, float s, bool full)
 {
     Color c = full ? HEART_RED : Color{ 70, 55, 95, 200 };
     DrawCircle((int)(cx - s * 0.45f), (int)(cy - s * 0.25f), (int)(s * 0.55f), c);
