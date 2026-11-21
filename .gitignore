@@ -1,0 +1,14 @@
+# build output
+build/
+build-*/
+dist/
+
+# files the game writes while playing
+cosmocat_best.txt
+storage.data
+
+# editor / OS noise
+.DS_Store
+*.user
+.vs/
+.vscode/
