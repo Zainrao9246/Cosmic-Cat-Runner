@@ -9,8 +9,8 @@
 # workflow clones raylib into android/app/jni/raylib, copies the game source
 # and assets into the Android project, then runs gradle (which drives the
 # NDK ndk-build) to produce the .apk. The game is the same single main.cpp
-# the desktop build uses — the Android glue lives in
-# android/app/src/main/jni/main_android.c.
+# the desktop build uses; the Android glue (activity lifecycle, input,
+# asset manager) is provided by raylib itself (rcore_android.c).
 #
 # Fixes applied (Nov 2026):
 #   - setup-android@v3: set packages: '' — its default 'tools platform-tools'
@@ -19,6 +19,10 @@
 #   - setup-java@v5 (v4 is deprecated).
 #   - setup-gradle@v4 with gradle pinned to 8.9 (AGP 8.5.2 needs Gradle 8.7+
 #     and is incompatible with Gradle 9.x that newer runners may ship).
+#   - main_android.c removed from the build: raylib (PLATFORM_ANDROID)
+#     already defines android_main() — a second definition fails to link.
+#   - Assets load via raylib's AAssetManager ("assets/..." relative paths);
+#     handled in main.cpp LoadAssetTex() with an __ANDROID__ branch.
 
 name: Build Android .apk
 
@@ -63,6 +67,9 @@ jobs:
           cp src/main.cpp android/app/src/main/jni/main.cpp
           mkdir -p android/app/src/main/assets/assets
           cp -r assets/* android/app/src/main/assets/assets/
+
+      - name: Patch the Android project files (safety nets)
+        run: python3 .github/workflows/patch_android.py
 
       - name: Install Gradle 8.9 (compatible with AGP 8.5.2)
         uses: gradle/actions/setup-gradle@v4
