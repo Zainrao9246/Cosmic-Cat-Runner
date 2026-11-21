@@ -14,6 +14,7 @@
         <activity
             android:name="android.app.NativeActivity"
             android:label="Cosmo Cat Run"
+            android:exported="true"
             android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|keyboardHidden|screenSize">
             <meta-data android:name="android.app.lib_name" android:value="main" />
