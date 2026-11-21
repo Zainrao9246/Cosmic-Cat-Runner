@@ -12,10 +12,13 @@
 # the desktop build uses — the Android glue lives in
 # android/app/src/main/jni/main_android.c.
 #
-# NOTE: this workflow could not be executed in the environment where the
-# game was written (no Android NDK there), so it is written to spec but not
-# yet run-tested. If the first run goes red, open the Actions log and adjust
-# as needed — most likely suspects are NDK/gradle version pins.
+# Fixes applied (Nov 2026):
+#   - setup-android@v3: set packages: '' — its default 'tools platform-tools'
+#     tries to install the obsolete 'tools' package which no longer exists in
+#     Google's SDK repo ("Failed to find package 'tools'", exit code 1).
+#   - setup-java@v5 (v4 is deprecated).
+#   - setup-gradle@v4 with gradle pinned to 8.9 (AGP 8.5.2 needs Gradle 8.7+
+#     and is incompatible with Gradle 9.x that newer runners may ship).
 
 name: Build Android .apk
 
@@ -37,13 +40,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Java 17 (gradle needs it)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up the Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''   # default ('tools platform-tools') fails: 'tools' no longer exists
 
       - name: Install the NDK (native code compiler)
         run: sdkmanager --install "ndk;26.1.10909125" > /dev/null
@@ -59,8 +64,10 @@ jobs:
           mkdir -p android/app/src/main/assets/assets
           cp -r assets/* android/app/src/main/assets/assets/
 
-      - name: Install gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Install Gradle 8.9 (compatible with AGP 8.5.2)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Build the .apk
         run: gradle -p android assembleDebug --no-daemon
