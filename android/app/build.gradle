@@ -1,0 +1,32 @@
+// The game app: a pure-native activity (no Java code of its own — the
+// activity is android.app.NativeActivity and the game lives in libmain.so,
+// built by ndk-build from src/main.cpp + the glue file in jni/).
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.cosmocat.run'
+    compileSdk 34
+    ndkVersion '26.1.10909125'
+
+    defaultConfig {
+        applicationId 'com.cosmocat.run'
+        minSdk 21            // Android 5.0+ — covers almost every phone
+        targetSdk 34
+        versionCode 4
+        versionName '1.4'
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
