@@ -15,6 +15,9 @@ whether or not the repo files have already been fixed.
   4. main.cpp — load APK assets through raylib's AAssetManager (relative
      "assets/..." paths); FileExists()/GetApplicationDirectory() cannot see
      inside an APK on Android.
+  5. Android.mk — raylib 5.0 renamed its sources (core.c -> rcore.c etc.);
+     an Android.mk still listing the old names fails with "No rule to make
+     target .../raylib/src/core.c".
 """
 import io
 import os
@@ -39,7 +42,7 @@ def write(path, s):
 
 
 # 1. stale Android glue file -----------------------------------------------
-print('[1/4] android_main glue')
+print('[1/5] android_main glue')
 glue = rel('android/app/src/main/jni/main_android.c')
 if os.path.exists(glue):
     os.remove(glue)
@@ -55,7 +58,7 @@ if os.path.exists(rel(mk)):
         print('  -> Android.mk already clean')
 
 # 2. Application.mk inline comments ----------------------------------------
-print('[2/4] Application.mk inline comments')
+print('[2/5] Application.mk inline comments')
 mk_app = 'android/app/src/main/jni/Application.mk'
 s = read(mk_app)
 fixed = re.sub(r'(?m)(:=\s*\S+)[ \t]+#.*$', r'\1', s)
@@ -65,7 +68,7 @@ else:
     print('  -> already clean')
 
 # 3. Manifest android:exported ----------------------------------------------
-print('[3/4] AndroidManifest.xml android:exported')
+print('[3/5] AndroidManifest.xml android:exported')
 man = 'android/app/src/main/AndroidManifest.xml'
 s = read(man)
 if 'android:exported' in s:
@@ -78,7 +81,7 @@ else:
     write(man, s)
 
 # 4. main.cpp Android asset loading -----------------------------------------
-print('[4/4] main.cpp asset loading')
+print('[4/5] main.cpp asset loading')
 main = 'android/app/src/main/jni/main.cpp'
 s = read(main)
 if 'AAssetManager' in s:
@@ -112,3 +115,24 @@ if old in s:
     write(main, s.replace(old, new))
 else:
     print('  !! LoadAssetTex pattern not found — leaving main.cpp unchanged')
+
+# 5. raylib 5.x source names in Android.mk ----------------------------------
+print('[5/5] Android.mk raylib source names')
+if os.path.exists(rel(mk)):
+    s = read(mk)
+    renames = {
+        '/src/core.c': '/src/rcore.c',
+        '/src/shapes.c': '/src/rshapes.c',
+        '/src/textures.c': '/src/rtextures.c',
+        '/src/text.c': '/src/rtext.c',
+        '/src/models.c': '/src/rmodels.c',
+    }
+    changed = False
+    for old_name, new_name in renames.items():
+        if old_name in s:
+            s = s.replace(old_name, new_name)
+            changed = True
+    if changed:
+        write(mk, s)
+    else:
+        print('  -> already using raylib 5.x names')
